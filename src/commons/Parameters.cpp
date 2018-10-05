@@ -63,6 +63,8 @@ Parameters::Parameters():
         PARAM_MIN_SEQ_ID(PARAM_MIN_SEQ_ID_ID,"--min-seq-id", "Seq. Id Threshold","list matches above this sequence identity (for clustering) [0.0,1.0]",typeid(float), (void *) &seqIdThr, "^0(\\.[0-9]+)?|1(\\.0+)?$", MMseqsParameter::COMMAND_ALIGN),
 	    PARAM_SCORE_BIAS(PARAM_SCORE_BIAS_ID,"--score-bias", "Score bias", "Score bias when computing the SW alignment (in bits)",typeid(float), (void *) &scoreBias, "^-?[0-9]*(\\.[0-9]+)?$", MMseqsParameter::COMMAND_ALIGN|MMseqsParameter::COMMAND_EXPERT),
         PARAM_ALT_ALIGNMENT(PARAM_ALT_ALIGNMENT_ID,"--alt-ali", "Alternative alignments","Show up to this many alternative alignments",typeid(int), (void *) &altAlignment, "^[0-9]{1}[0-9]*$", MMseqsParameter::COMMAND_ALIGN),
+        PARAM_GAP_OPEN(PARAM_GAP_OPEN_ID,"--gap-open", "Gap open cost","Gap open cost",typeid(int), (void *) &gapOpen, "^[0-9]{1}[0-9]*$", MMseqsParameter::COMMAND_ALIGN),
+        PARAM_GAP_EXTEND(PARAM_GAP_EXTEND_ID,"--gap-extend", "Gap extension cost","Gap extension cost",typeid(int), (void *) &gapExtend, "^[0-9]{1}[0-9]*$", MMseqsParameter::COMMAND_ALIGN),
 
         // clustering
         PARAM_CLUSTER_MODE(PARAM_CLUSTER_MODE_ID,"--cluster-mode", "Cluster mode", "0: Setcover, 1: connected component, 2: Greedy clustering by sequence length  3: Greedy clustering by sequence length (low mem)",typeid(int), (void *) &clusteringMode, "[0-3]{1}$", MMseqsParameter::COMMAND_CLUST),
@@ -231,6 +233,8 @@ Parameters::Parameters():
     align.push_back(PARAM_PCA);
     align.push_back(PARAM_PCB);
     align.push_back(PARAM_SCORE_BIAS);
+    align.push_back(PARAM_GAP_OPEN);
+    align.push_back(PARAM_GAP_EXTEND);
     align.push_back(PARAM_THREADS);
     align.push_back(PARAM_V);
 
@@ -1222,6 +1226,8 @@ void Parameters::setDefaults() {
     maxAccept   = INT_MAX;
     seqIdThr = 0.0;
     altAlignment = 0;
+    gapOpen = 11;
+    gapExtend = 1;
     addBacktrace = false;
     realign = false;
     clusteringMode = SET_COVER;
