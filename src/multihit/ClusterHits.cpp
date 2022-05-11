@@ -101,7 +101,7 @@ double computeWeight(double* lookup, int k, int K, int Nq, int Nt){
     return w;
 }
 
-double clusterMatchScore(double* lookup, std::vector<hit> &cluster, int K, int Nq, int Nt){
+double clusterMatchScore(double* lookup, std::vector<hit> &cluster, int K, int Nq, int Nt, bool useWeight){
     if(cluster.size()== 0 ){
         return 0.0;
     }
@@ -119,9 +119,13 @@ double clusterMatchScore(double* lookup, std::vector<hit> &cluster, int K, int N
             pClu = clusterPval(lookup, k, span, K, Nq, Nt);
             pOrd = orderingPval(lookup, k, m);
         }
-        double w = computeWeight(lookup, k, K, Nq, Nt);
-        //full score would be: -log(pClu) - log(pOrd) + log(1 -log(pClu) - log(pOrd))
-        return - w * log(pClu) - (1 - w) * log(pOrd);
+        if (useWeight) {
+            double w = computeWeight(lookup, k, K, Nq, Nt);
+            //full score would be: -log(pClu) - log(pOrd) + log(1 -log(pClu) - log(pOrd))
+            return - w * log(pClu) - (1 - w) * log(pOrd);
+        } else {
+            return - log(pClu) - log(pOrd);
+        }
     }
 }
 
@@ -357,7 +361,7 @@ unsigned int cluster_idx = 0;
                     }
                     else{
                         std::vector<hit> tmpCluster = groupNodes(nodes,match,i,j,d);
-                        DistMat[i][j] = clusterMatchScore(lGammaLookup,tmpCluster,K,Nq,Nt);//score(i,j)
+                        DistMat[i][j] = clusterMatchScore(lGammaLookup,tmpCluster,K,Nq,Nt,par.clusterUseWeight);//score(i,j)
                     }
                     dmin[i] = (DistMat[i][j] > DistMat[i][dmin[i]]) ? j : dmin[i];
                 }
@@ -366,8 +370,13 @@ unsigned int cluster_idx = 0;
             //Score is determined by the maxscore in the first iteration, due to varying Nq & Nt      
             double maxScore = DBL_MAX;
             bool isFirstIter = true;
-            double w = computeWeight(lGammaLookup, 2, K, Nq, Nt);
-            double sMin  = -w * log(clusterPval_fast(d+1, K, Nq, Nt)) - (1-w)* log(orderingPval(lGammaLookup,2,1));
+            double sMin;
+            if(par.clusterUseWeight){
+                double w = computeWeight(lGammaLookup, 2, K, Nq, Nt);
+                sMin  = -w * log(clusterPval_fast(d+1, K, Nq, Nt)) - (1-w)* log(orderingPval(lGammaLookup,2,1));
+            } else{
+                sMin  = -log(clusterPval_fast(d+1, K, Nq, Nt)) - log(orderingPval(lGammaLookup,2,1));
+            }
             while(isFirstIter|| (maxScore >= sMin)){
                 size_t i1 = 0;
                 size_t i2;
@@ -406,7 +415,7 @@ unsigned int cluster_idx = 0;
                     }
                     else{
                         std::vector<hit> tmpCluster = groupNodes(nodes,match,i1,j,d);
-                        DistMat[i1][j] = clusterMatchScore(lGammaLookup,tmpCluster,K,Nq,Nt);
+                        DistMat[i1][j] = clusterMatchScore(lGammaLookup,tmpCluster,K,Nq,Nt,par.clusterUseWeight);
                         DistMat[j][i1] = DistMat[i1][j];
                     }
 
@@ -438,7 +447,7 @@ unsigned int cluster_idx = 0;
                     for(size_t j = 0; j < nodes[i].size(); j++){
                         cluster.push_back(match[nodes[i][j]]);
                     }
-                    double pCO = exp(-clusterMatchScore(lGammaLookup, cluster, K, Nq, Nt));
+                    double pCO = exp(-clusterMatchScore(lGammaLookup, cluster, K, Nq, Nt, par.clusterUseWeight));
                     double pMH = multihitPval(lGammaLookup, cluster, Nq, par.alpha);
                     if(pCO < par.pCluThr && (pMH < par.pMHThr)){ // par.pCluThr,par.pMultiHitThr;
                         headerBuffer.append(SSTR(qSet));

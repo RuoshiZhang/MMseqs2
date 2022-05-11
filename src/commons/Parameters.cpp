@@ -233,6 +233,7 @@ Parameters::Parameters():
         PARAM_CLUSTER_PVAL(PARAM_CLUSTER_PVAL_ID, "--cluster-pval", "Clustering and Ordering P-value cutoff","Clustering and Ordering P-value threshold for cluster match output", typeid(float), (void *) &pCluThr, "^0(\\.[0-9]+)?|^1(\\.0+)?$"),
         PARAM_MAX_GENE_GAP(PARAM_MAX_GENE_GAP_ID, "--max-gene-gap", "Maximum gene gaps", "Maximum number of genes allowed between two clusters to merge", typeid(int), (void *) &maxGeneGaps, "^[1-9]{1}[0-9]*$"),
         PARAM_CLUSTER_SIZE(PARAM_CLUSTER_SIZE_ID, "--cluster-size", "Minimal cluster size", "Minimum number of genes to define cluster", typeid(int), (void *) &clusterSize, "^[1-9]{1}[0-9]*$"),
+        PARAM_CLUSTER_USE_WEIGHT(PARAM_CLUSTER_USE_WEIGHT_ID, "--cluster-use-weight", "Cluster weighting factor ", "Use weighting factor to calculate cluster match score", typeid(int), (void *) &clusterUseWeight, "^[1-9]{1}[0-9]*$"),
         PARAM_PROFILE_CLUSTER_SEARCH(PARAM_PROFILE_CLUSTER_SEARCH_ID, "--profile-cluster-search", "Cluster search against profiles", "Perform profile(target)-sequence searches in clustersearch", typeid(bool), (void *) &profileClusterSearch, ""),
         // concatdb
         PARAM_PRESERVEKEYS(PARAM_PRESERVEKEYS_ID, "--preserve-keys", "Preserve the keys", "The keys of the two DB should be distinct, and they will be preserved in the concatenation", typeid(bool), (void *) &preserveKeysB, ""),
@@ -851,6 +852,7 @@ Parameters::Parameters():
     clusterhits.push_back(&PARAM_CLUSTER_PVAL);
     clusterhits.push_back(&PARAM_MAX_GENE_GAP);
     clusterhits.push_back(&PARAM_CLUSTER_SIZE);
+    clusterhits.push_back(&PARAM_CLUSTER_USE_WEIGHT);
     clusterhits.push_back(&PARAM_DB_OUTPUT);
     clusterhits.push_back(&PARAM_ALPHA);
     clusterhits.push_back(&PARAM_THREADS);
@@ -2415,6 +2417,7 @@ void Parameters::setDefaults() {
     clusterSize = 2;
     pMHThr = 0.01;
     pCluThr = 0.01;
+    clusterUseWeight = 1;
     profileClusterSearch = 0;
 
     // concatdbs

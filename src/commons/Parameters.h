@@ -588,6 +588,7 @@ public:
     int clusterSize;
     float pMHThr;
     float pCluThr;
+    bool clusterUseWeight;
     bool profileClusterSearch;
 
     // mergedbs
@@ -927,6 +928,7 @@ public:
     PARAMETER(PARAM_CLUSTER_PVAL)
     PARAMETER(PARAM_MAX_GENE_GAP)
     PARAMETER(PARAM_CLUSTER_SIZE)
+    PARAMETER(PARAM_CLUSTER_USE_WEIGHT)
     PARAMETER(PARAM_PROFILE_CLUSTER_SEARCH)
 
     // concatdb
