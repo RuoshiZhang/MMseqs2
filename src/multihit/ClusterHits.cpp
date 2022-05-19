@@ -30,18 +30,31 @@ double LBinCoeff(double* lookup, int M, int k);
 
 
 double hypergeoDensity(double* lookup, int k, int n, int N, int K){
-    return exp(LBinCoeff(lookup, n, k) + LBinCoeff(lookup, N - n, K - k) - LBinCoeff(lookup, N, K));
+    if(k < std::max(0,n+K-N) || k > std::min(K,n)){
+        return 0.0;
+    }
+    else{
+        return exp(LBinCoeff(lookup, n, k) + LBinCoeff(lookup, N - n, K - k) - LBinCoeff(lookup, N, K));
+    }
 }
 
 double hypergeoDistribution(double* lookup, int k, int n, int N, int K){
-    double sum = 0;
-    for (int i = 0; i < k + 1; i++){
-        sum += hypergeoDensity(lookup, i, n, N, K);
+    if(k < std::max(0,n+K-N)){
+        return 0.0;
     }
-    return sum;
+    else if(k > std::min(K,n)){
+        return 1.0;
+    }
+    else{
+        double sum = 0;
+        for (int i = 0; i < k + 1; i++){
+            sum += hypergeoDensity(lookup, i, n, N, K);
+        }
+        return sum;
+    }
 }
 
-double clusterPval(double* lookup, int k, int m, int K, int Nq, int Nt) {
+double logClusterPval(double* lookup, int k, int m, int K, int Nq, int Nt) {
     size_t minKm = (K < m) ? K : m;
     double sum = 0;
     for (size_t Kp = k; Kp <= minKm; Kp++){
@@ -49,9 +62,12 @@ double clusterPval(double* lookup, int k, int m, int K, int Nq, int Nt) {
         double PHG = hypergeoDistribution(lookup, (k - 2), (Kp - 1), (Nt - 1), (m - 1));
         sum += pHG * (1 - pow(PHG, k));
     }
-    return 1 - pow((1 - sum), (K - k + 1));
+    if (sum < DBL_EPSILON){
+        return log(K - k  + 1) + lookup[k+1] + (k-1) * log(1.0 * K / (Nq * Nt));
+    } else {
+        return log(1 - pow((1 - sum), (K - k + 1)));
+    }
 }
-
 
 double clusterPval_fast(int m, int K, int Nq, int Nt) {
     double power = 2.0 * pow((m - 1), 2) * (K - 1);
@@ -59,10 +75,9 @@ double clusterPval_fast(int m, int K, int Nq, int Nt) {
 }
 
 
-double orderingPval(double* lookup, int k, int m){
-    return (1 - 1.0 * m / k)/(pow(2,m) * exp(lookup[m+1]));
+double logOrderingPval(double* lookup, int k, int m){
+    return log(1 - 1.0 * m / k) - m * log(2) - lookup[m+1];
 }
-
 
 int findSpan(const std::vector<hit> &cluster){
     unsigned int iMax = 0;
@@ -96,8 +111,8 @@ int findConservedPairs(std::vector<hit> &cluster){
 }
 
 double computeWeight(double* lookup, int k, int K, int Nq, int Nt){
-    double factorNqNtK = Nq * Nt / K;
-    double w = (-lookup[k+1] + (k-1) * log(factorNqNtK)) / ((k-1) * log(2 * factorNqNtK));
+    double factorNqNtK = 1.0 * Nq * Nt / K;
+    double w = (-log(K-k+1) - lookup[k+1] + (k-1) * log(factorNqNtK)) / (-log(K-k+1) + (k-1) * log(2 * factorNqNtK));
     return w;
 }
 
@@ -108,23 +123,23 @@ double clusterMatchScore(double* lookup, std::vector<hit> &cluster, int K, int N
     else {
         int span = findSpan(cluster);
         int k = cluster.size();
-        double pClu;
-        double pOrd;
+        double logpClu;
+        double logpOrd;
         int m = findConservedPairs(cluster);
         if(k == 2){
-            pClu = clusterPval_fast(span, K, Nq, Nt);
-            pOrd = orderingPval(lookup, k, m);
+            logpClu = log(clusterPval_fast(span, K, Nq, Nt));
+            logpOrd = logOrderingPval(lookup, k, m);
         }
         else{
-            pClu = clusterPval(lookup, k, span, K, Nq, Nt);
-            pOrd = orderingPval(lookup, k, m);
+            logpClu = logClusterPval(lookup, k, span, K, Nq, Nt);
+            logpOrd = logOrderingPval(lookup, k, m);
         }
         if (useWeight) {
             double w = computeWeight(lookup, k, K, Nq, Nt);
             //full score would be: -log(pClu) - log(pOrd) + log(1 -log(pClu) - log(pOrd))
-            return - w * log(pClu) - (1 - w) * log(pOrd);
+            return - w * logpClu - (1 - w) * logpOrd;
         } else {
-            return - log(pClu) - log(pOrd);
+            return - logpClu - logpOrd;
         }
     }
 }
@@ -373,9 +388,9 @@ unsigned int cluster_idx = 0;
             double sMin;
             if(par.clusterUseWeight){
                 double w = computeWeight(lGammaLookup, 2, K, Nq, Nt);
-                sMin  = -w * log(clusterPval_fast(d+1, K, Nq, Nt)) - (1-w)* log(orderingPval(lGammaLookup,2,1));
+                sMin  = -w * log(clusterPval_fast(d+1, K, Nq, Nt)) - (1-w)* logOrderingPval(lGammaLookup,2,1);
             } else{
-                sMin  = -log(clusterPval_fast(d+1, K, Nq, Nt)) - log(orderingPval(lGammaLookup,2,1));
+                sMin  = -log(clusterPval_fast(d+1, K, Nq, Nt)) - logOrderingPval(lGammaLookup,2,1);
             }
             while(isFirstIter|| (maxScore >= sMin)){
                 size_t i1 = 0;
