@@ -10,8 +10,7 @@ void setIterativeClusterSearchWorkflowDefaults(Parameters *p) {
     p->sensitivity = 5.7;
     // TODO: Check query cov maybe?
     p->covThr = 0.8;
-    p->evalThr = 10;
-    p->evalProfile = 10;
+    p->evalProfile = 0.1;
     // TODO: Needs to be more than the count of target sets (10x?)
     //p->maxSequences = 1500;
     // TODO: Why??
