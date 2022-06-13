@@ -9,6 +9,7 @@
 
 void setMultiHitDbWorkflowDefaults(Parameters *p) {
     p->orfMinLength = 30;
+    p->shuffleDatabase = 0;
 }
 
 int multihitdb(int argc, const char **argv, const Command &command) {
@@ -64,6 +65,7 @@ int multihitdb(int argc, const char **argv, const Command &command) {
     par.stat = "linecount";
     cmd.addVariable("RESULT2STATS_PAR", par.createParameterString(par.result2stats).c_str());
     cmd.addVariable("THREADS_PAR", par.createParameterString(par.onlythreads).c_str());
+    cmd.addVariable("VERBOSITY", par.createParameterString(par.onlyverbosity).c_str());
 
     FileUtil::writeFile(tmpDir + "/multihitdb.sh", multihitdb_sh, multihitdb_sh_len);
     std::string program(tmpDir + "/multihitdb.sh");

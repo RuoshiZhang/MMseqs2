@@ -27,6 +27,7 @@ hasCommand () {
 }
 
 hasCommand awk
+hasCommand join
 hasCommand sort
 
 [ -z "$MMSEQS" ] && echo "Please set the environment variable \$MMSEQS to your MMSEQS binary." && exit 1;
@@ -35,41 +36,32 @@ export MMSEQS_FORCE_MERGE=1
 
 OUTDB="$(abspath "${OUTDB}")"
 
-if notExists "${OUTDB}"; then
+# if notExists "${OUTDB}"; then
+#     # shellcheck disable=SC2086
+#     "${MMSEQS}" createdb "$@" "${OUTDB}" ${CREATEDB_PAR} \ #have to force --shuffle 0??
+#         || fail "createdb failed"
+# fi
+
+if notExists "${TMP_PATH}/seqDB"; then
     # shellcheck disable=SC2086
     "${MMSEQS}" createdb "$@" "${TMP_PATH}/seqDB" ${CREATEDB_PAR} \
         || fail "createdb failed"
 fi
 
-if notExists "${OUTDB}"; then
-    # shellcheck disable=SC2086
-    "${MMSEQS}" gff2db $(cat "${GFFDIR}") "${TMP_PATH}/seqDB" "${OUTDB}" ${GFF2DB_PAR} \
-        || fail "gff2db failed"
-fi
 
+if [ "$("${MMSEQS}" dbtype "${TMP_PATH}/seqDB")" = "Nucleotide" ]; then
 
-if [ "$("${MMSEQS}" dbtype "${OUTDB}")" = "Nucleotide" ]; then
+    echo "Input DB type is Nucleotide."
+
+    if notExists "${OUTDB}"; then
+        # shellcheck disable=SC2086
+        "${MMSEQS}" gff2db $(cat "${GFFDIR}") "${TMP_PATH}/seqDB" "${OUTDB}" ${GFF2DB_PAR} \
+            || fail "gff2db failed"
+    fi
+
     mv -f "${OUTDB}" "${OUTDB}_nucl"
     mv -f "${OUTDB}.index" "${OUTDB}_nucl.index"
-#    mv -f "${OUTDB}.lookup" "${OUTDB}_nucl.lookup"
-#    mv -f "${OUTDB}.source" "${OUTDB}_nucl.source"
     mv -f "${OUTDB}.dbtype" "${OUTDB}_nucl.dbtype"
-
-#    mv -f "${OUTDB}_h" "${OUTDB}_nucl_h"
-#    mv -f "${OUTDB}_h.index" "${OUTDB}_nucl_h.index"
-#    mv -f "${OUTDB}_h.dbtype" "${OUTDB}_nucl_h.dbtype"
-
-    if notExists "${OUTDB}_nucl_contig_to_set.index"; then
-        awk '{ print $1"\t"$3; }' "${OUTDB}.lookup" | sort -k1,1n -k2,2n > "${OUTDB}_member_to_set.tsv"
-        "${MMSEQS}" tsv2db "${OUTDB}_member_to_set.tsv" "${OUTDB}_member_to_set" --output-dbtype 5 \
-            || fail "tsv2db failed"
-    fi
-
-    if notExists "${OUTDB}_nucl_set_to_contig.index"; then
-        awk '{ print $3"\t"$1; }' "${OUTDB}.lookup" | sort -k1,1n -k2,2n > "${OUTDB}_set_to_member.tsv"
-        "${MMSEQS}" tsv2db "${OUTDB}_set_to_member.tsv" "${OUTDB}_set_to_member" --output-dbtype 5 \
-            || fail "tsv2db failed"
-    fi
 
     if notExists "${OUTDB}.index"; then
         # shellcheck disable=SC2086
@@ -77,14 +69,65 @@ if [ "$("${MMSEQS}" dbtype "${OUTDB}")" = "Nucleotide" ]; then
             || fail "translatenucs failed"
     fi
 
-    if notExists "${OUTDB}_set_size.index"; then
+elif [ "$("${MMSEQS}" dbtype "${TMP_PATH}/seqDB")" = "Aminoacid" ]; then 
+
+echo "Input DB type is Aminoacid."
+
+    if notExists "${TMP_PATH}/seqDB_h_pref"; then
         # shellcheck disable=SC2086
-        "${MMSEQS}" result2stats "${OUTDB}" "${OUTDB}" "${OUTDB}_set_to_member" "${OUTDB}_set_size" ${RESULT2STATS_PAR} \
-            || fail "result2stats failed"
+        "${MMSEQS}" prefixid "${TMP_PATH}/seqDB_h" "${TMP_PATH}/seqDB_h_pref" --tsv ${THREADS_PAR}\
+            || fail "prefixid failed"
     fi
 
+    if notExists "${TMP_PATH}/seqDB.lookup.tmp"; then
+        #remove whitespaces -> split prodigal header by "#" and print relavant columns -> swap start and end if gene on minus strand -> merge to one column of header -> sort by seqid -> replace the seq name column in lookup -> recount pos idx by setid
+        awk '{ gsub(/ /,""); print }' "${TMP_PATH}/seqDB_h_pref" \
+        |awk -F '[\t#]' 'NF{NF-=1};1' OFS='\t' \
+        |awk -F'\t' '$5=="-1" { temp = $4; $4 = $3; $3 = temp } 1' OFS='\t' \
+        |sort -k1,1n > "${TMP_PATH}/seqDB_h_pref.tmp"
+
+        join -t "$(printf '\t')" -o '1.1 2.2 2.3 2.4 1.3' "${TMP_PATH}/seqDB.lookup" "${TMP_PATH}/seqDB_h_pref.tmp" \
+        |awk -F '[\t]' '{ if (setid == $NF) { counter++ } else { counter = 1; setid = $NF }; print $1"\t"$2"_"counter"_"$4"_"$5"\t"$NF }' \
+        > "${TMP_PATH}/seqDB.lookup.tmp"
+    fi
+    
+    mv -f -- "${TMP_PATH}/seqDB.lookup.tmp" "${TMP_PATH}/seqDB.lookup"
+    rm "${TMP_PATH}/seqDB_h_pref"
+    rm "${TMP_PATH}/seqDB_h_pref.tmp"
+
+	if notExists "${OUTDB}"; then
+	    # shellcheck disable=SC2086
+	    "${MMSEQS}" mvdb "${TMP_PATH}/seqDB" "${OUTDB}" ${VERBOSITY} \
+		|| fail "mvdb failed"
+	fi
+
+	if notExists "${OUTDB}_h"; then
+	    # shellcheck disable=SC2086
+	    "${MMSEQS}" mvdb "${TMP_PATH}/seqDB_h" "${OUTDB}_h" ${VERBOSITY} \
+		|| fail "mvdb failed"
+	fi
+
+    mv -f "${TMP_PATH}/seqDB.source" "${OUTDB}.source"
 else
     fail "protein mode not implemented"
+fi
+
+if notExists "${OUTDB}_member_to_set.index"; then
+    awk '{ print $1"\t"$3; }' "${OUTDB}.lookup" | sort -k1,1n -k2,2n > "${OUTDB}_member_to_set.tsv"
+    "${MMSEQS}" tsv2db "${OUTDB}_member_to_set.tsv" "${OUTDB}_member_to_set" --output-dbtype 5 \
+        || fail "tsv2db failed"
+fi
+
+if notExists "${OUTDB}_set_to_member.index"; then
+    awk '{ print $3"\t"$1; }' "${OUTDB}.lookup" | sort -k1,1n -k2,2n > "${OUTDB}_set_to_member.tsv"
+    "${MMSEQS}" tsv2db "${OUTDB}_set_to_member.tsv" "${OUTDB}_set_to_member" --output-dbtype 5 \
+        || fail "tsv2db failed"
+fi
+
+if notExists "${OUTDB}_set_size.index"; then
+    # shellcheck disable=SC2086
+    "${MMSEQS}" result2stats "${OUTDB}" "${OUTDB}" "${OUTDB}_set_to_member" "${OUTDB}_set_size" ${RESULT2STATS_PAR} \
+        || fail "result2stats failed"
 fi
 
 if [ -n "${REMOVE_TMP}" ]; then
