@@ -212,6 +212,10 @@ double multihitPval(double* lookup, std::vector<hit> &cluster, int Nq, double al
         return 0.0;
     }        
     double expMinusR = exp(-r);
+    //expMinusR can also underflow
+    if (expMinusR == 0) {
+        return 0.0;
+    }
     double sum = 0;
     for (size_t i = 0; i < k - 1; ++i){
         sum += pow(r,i)/exp(lookup[i+1]);

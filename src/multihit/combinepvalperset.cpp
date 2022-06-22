@@ -122,12 +122,17 @@ public:
             }
 
             if (std::isinf(r)) {
-                buffer.append("0");
+                buffer.append(SSTR(0.0));
                 return buffer;
-            }        
+            }
 
             const double expMinusR = exp(-r);
-            
+            //expMinusR can also underflow
+            if (expMinusR == 0) {
+                buffer.append(SSTR(0.0));
+                return buffer;
+            }
+
             //multihit edge case p0 = 1
             if (pvalThreshold == 1.0) {
                 buffer.append(SSTR(expMinusR * numTargetSets));
@@ -139,7 +144,7 @@ public:
             const double logR = log(r);
             for (size_t i = 0; i < orfCount; ++i) { 
                 truncatedFisherPval += exp(i*logR - lGammaLookup[i+1] + logBiLookup[thread_idx][i]);
-            }            
+            }
             updatedPval = expMinusR * truncatedFisherPval;       
         } 
 
