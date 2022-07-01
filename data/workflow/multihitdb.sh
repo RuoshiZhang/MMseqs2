@@ -36,12 +36,6 @@ export MMSEQS_FORCE_MERGE=1
 
 OUTDB="$(abspath "${OUTDB}")"
 
-# if notExists "${OUTDB}"; then
-#     # shellcheck disable=SC2086
-#     "${MMSEQS}" createdb "$@" "${OUTDB}" ${CREATEDB_PAR} \ #have to force --shuffle 0??
-#         || fail "createdb failed"
-# fi
-
 if notExists "${TMP_PATH}/seqDB"; then
     # shellcheck disable=SC2086
     "${MMSEQS}" createdb "$@" "${TMP_PATH}/seqDB" ${CREATEDB_PAR} \
@@ -53,15 +47,19 @@ if [ "$("${MMSEQS}" dbtype "${TMP_PATH}/seqDB")" = "Nucleotide" ]; then
 
     echo "Input DB type is Nucleotide."
 
+    [ -z "$GFFDIR" ] && echo "Please provide the GFF directory file with the --gff-dir parameter." && exit 1;
+        
+    GFFDIR="$(abspath "${GFFDIR}")"
+
     if notExists "${OUTDB}"; then
         # shellcheck disable=SC2086
-        "${MMSEQS}" gff2db $(cat "${GFFDIR}") "${TMP_PATH}/seqDB" "${OUTDB}" ${GFF2DB_PAR} \
+        "${MMSEQS}" gff2db $(cat "${GFFDIR}") "${TMP_PATH}/seqDB" "${TMP_PATH}/seqDB_nucl" ${GFF2DB_PAR} \
             || fail "gff2db failed"
     fi
 
-    mv -f "${OUTDB}" "${OUTDB}_nucl"
-    mv -f "${OUTDB}.index" "${OUTDB}_nucl.index"
-    mv -f "${OUTDB}.dbtype" "${OUTDB}_nucl.dbtype"
+    mv -f "${TMP_PATH}/seqDB_nucl" "${OUTDB}_nucl"
+    mv -f "${TMP_PATH}/seqDB_nucl.index" "${OUTDB}_nucl.index"
+    mv -f "${TMP_PATH}/seqDB_nucl.dbtype" "${OUTDB}_nucl.dbtype"
 
     if notExists "${OUTDB}.index"; then
         # shellcheck disable=SC2086
@@ -71,7 +69,7 @@ if [ "$("${MMSEQS}" dbtype "${TMP_PATH}/seqDB")" = "Nucleotide" ]; then
 
 elif [ "$("${MMSEQS}" dbtype "${TMP_PATH}/seqDB")" = "Aminoacid" ]; then 
 
-echo "Input DB type is Aminoacid."
+    echo "Input DB type is Aminoacid."
 
     if notExists "${TMP_PATH}/seqDB_h_pref"; then
         # shellcheck disable=SC2086

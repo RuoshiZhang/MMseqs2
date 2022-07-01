@@ -235,6 +235,7 @@ Parameters::Parameters():
         PARAM_CLUSTER_SIZE(PARAM_CLUSTER_SIZE_ID, "--cluster-size", "Minimal cluster size", "Minimum number of genes to define cluster", typeid(int), (void *) &clusterSize, "^[1-9]{1}[0-9]*$"),
         PARAM_CLUSTER_USE_WEIGHT(PARAM_CLUSTER_USE_WEIGHT_ID, "--cluster-use-weight", "Cluster weighting factor ", "Use weighting factor to calculate cluster match score", typeid(bool), (void *) &clusterUseWeight, ""),
         PARAM_PROFILE_CLUSTER_SEARCH(PARAM_PROFILE_CLUSTER_SEARCH_ID, "--profile-cluster-search", "Cluster search against profiles", "Perform profile(target)-sequence searches in clustersearch", typeid(bool), (void *) &profileClusterSearch, ""),
+        PARAM_GFF_DIR(PARAM_GFF_DIR_ID, "--gff-dir", "gff dir file", "Path to gff dir file", typeid(std::string), (void *) &gffDir, ""),
         // concatdb
         PARAM_PRESERVEKEYS(PARAM_PRESERVEKEYS_ID, "--preserve-keys", "Preserve the keys", "The keys of the two DB should be distinct, and they will be preserved in the concatenation", typeid(bool), (void *) &preserveKeysB, ""),
         PARAM_TAKE_LARGER_ENTRY(PARAM_TAKE_LARGER_ENTRY_ID, "--take-larger-entry", "Take the larger entry", "Only keep the larger entry (dataSize >) in the concatenation, both databases need the same keys in the index", typeid(bool), (void *) &takeLargerEntry, ""),
@@ -1304,6 +1305,7 @@ Parameters::Parameters():
     multihitdb = combineList(multihitdb, extractorfs);
     multihitdb = combineList(multihitdb, translatenucs);
     multihitdb = combineList(multihitdb, gff2db);
+    multihitdb.push_back(&PARAM_GFF_DIR);
 
     // multi hit search
     multihitsearch = combineList(searchworkflow, besthitbyset);
@@ -1311,6 +1313,7 @@ Parameters::Parameters():
     multihitsearch = combineList(multihitsearch, clusterhits);
     multihitsearch = combineList(multihitsearch, filtermatches);
     multihitsearch.push_back(&PARAM_PROFILE_CLUSTER_SEARCH);
+
 
     // iterative cluster search
     iterativeclustersearch = combineList(searchworkflow, besthitbyset);
@@ -2419,6 +2422,7 @@ void Parameters::setDefaults() {
     pCluThr = 0.01;
     clusterUseWeight = 1;
     profileClusterSearch = 0;
+    gffDir = "";
 
     // concatdbs
     preserveKeysB = false;

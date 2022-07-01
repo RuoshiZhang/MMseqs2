@@ -9,6 +9,7 @@
 
 void setMultiHitDbWorkflowDefaults(Parameters *p) {
     p->orfMinLength = 30;
+    //TODO: for protein seq we have to force --shuffle 0 
     p->shuffleDatabase = 0;
 }
 
@@ -45,8 +46,7 @@ int multihitdb(int argc, const char **argv, const Command &command) {
     std::string outDb = par.filenames.back();
     par.filenames.pop_back();
 
-    std::string gffDir = par.filenames.back();
-    par.filenames.pop_back();    
+    std::string gffDir = par.gffDir;
 
     CommandCaller cmd;
     cmd.addVariable("OUTDB", outDb.c_str());
@@ -61,7 +61,6 @@ int multihitdb(int argc, const char **argv, const Command &command) {
     cmd.addVariable("GFF2DB_PAR", par.createParameterString(par.gff2db).c_str());
     cmd.addVariable("EXTRACTORFS_PAR", par.createParameterString(par.extractorfs).c_str());
     cmd.addVariable("TRANSLATENUCS_PAR", par.createParameterString(par.translatenucs).c_str());
-    cmd.addVariable("SWAPDB_PAR", par.createParameterString(par.swapdb).c_str());
     par.stat = "linecount";
     cmd.addVariable("RESULT2STATS_PAR", par.createParameterString(par.result2stats).c_str());
     cmd.addVariable("THREADS_PAR", par.createParameterString(par.onlythreads).c_str());

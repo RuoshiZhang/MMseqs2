@@ -590,6 +590,7 @@ public:
     float pCluThr;
     bool clusterUseWeight;
     bool profileClusterSearch;
+    std::string gffDir;
 
     // mergedbs
     std::string mergePrefixes;
@@ -930,6 +931,7 @@ public:
     PARAMETER(PARAM_CLUSTER_SIZE)
     PARAMETER(PARAM_CLUSTER_USE_WEIGHT)
     PARAMETER(PARAM_PROFILE_CLUSTER_SEARCH)
+    PARAMETER(PARAM_GFF_DIR)
 
     // concatdb
     PARAMETER(PARAM_PRESERVEKEYS)
