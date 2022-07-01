@@ -47,11 +47,15 @@ if [ "$("${MMSEQS}" dbtype "${TMP_PATH}/seqDB")" = "Nucleotide" ]; then
 
     echo "Input DB type is Nucleotide."
 
-    [ -z "$GFFDIR" ] && echo "Please provide the GFF directory file with the --gff-dir parameter." && exit 1;
+    [ -z "$GFFDIR" ] && fail "No GFF directory file is given. Please provide a valid path to GFF directory file with the --gff-dir parameter."
         
     GFFDIR="$(abspath "${GFFDIR}")"
 
-    if notExists "${OUTDB}"; then
+    if notExists "${GFFDIR}"; then 
+        fail "Cannot find GFF directory file. Please provide a valid path to GFF directory file with the --gff-dir parameter."
+    fi
+
+    if notExists "${TMP_PATH}/seqDB_nucl"; then
         # shellcheck disable=SC2086
         "${MMSEQS}" gff2db $(cat "${GFFDIR}") "${TMP_PATH}/seqDB" "${TMP_PATH}/seqDB_nucl" ${GFF2DB_PAR} \
             || fail "gff2db failed"
