@@ -62,6 +62,7 @@ if [ "$("${MMSEQS}" dbtype "${TMP_PATH}/seqDB")" = "Nucleotide" ]; then
     fi
 
     mv -f "${TMP_PATH}/seqDB_nucl" "${OUTDB}_nucl"
+    mv -f "${TMP_PATH}/seqDB_nucl.lookup" "${OUTDB}.lookup"
     mv -f "${TMP_PATH}/seqDB_nucl.index" "${OUTDB}_nucl.index"
     mv -f "${TMP_PATH}/seqDB_nucl.dbtype" "${OUTDB}_nucl.dbtype"
 
@@ -111,7 +112,7 @@ elif [ "$("${MMSEQS}" dbtype "${TMP_PATH}/seqDB")" = "Aminoacid" ]; then
 
     mv -f "${TMP_PATH}/seqDB.source" "${OUTDB}.source"
 else
-    fail "protein mode not implemented"
+    fail "Input DB has the wrong type. Allowed input: Nucleotide, Aminoacid";
 fi
 
 if notExists "${OUTDB}_member_to_set.index"; then
