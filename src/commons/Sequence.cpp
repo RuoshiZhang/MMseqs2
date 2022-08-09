@@ -363,6 +363,10 @@ void Sequence::reverse() {
             i_curr += profile_row_size;
             j_curr -= profile_row_size;
         }
+        for (size_t i = 0; i < PROFILE_AA_SIZE; i++) {
+            int8_t *startToRead = &profile_for_alignment[i * L];
+            std::reverse(startToRead, startToRead + L);
+        }
     }
     std::reverse(numSequence, numSequence + this->L); // reverse sequence
 }
@@ -375,18 +379,18 @@ void Sequence::print() {
     std::cout << std::endl;
 }
 
-void extractProfileData(const char* data, const BaseMatrix &subMat, const int offset, std::string &result) {
+void extractProfileData(const char* data, size_t dataSize, const BaseMatrix &subMat, const int offset, std::string &result) {
     size_t i = 0;
-    while (data[i] != '\0'){
+    while (i < dataSize){
         result.append(1, subMat.num2aa[(int)data[i + Sequence::PROFILE_AA_SIZE + offset]]);
         i += Sequence::PROFILE_READIN_SIZE;
     }
 }
 
-void Sequence::extractProfileSequence(const char* data, const BaseMatrix &submat, std::string &result) {
-    extractProfileData(data, submat, 0, result);
+void Sequence::extractProfileSequence(const char* data, size_t dataSize, const BaseMatrix &submat, std::string &result) {
+    extractProfileData(data, dataSize, submat, 0, result);
 }
 
-void Sequence::extractProfileConsensus(const char* data, const BaseMatrix &submat, std::string &result) {
-    extractProfileData(data, submat, 1, result);
+void Sequence::extractProfileConsensus(const char* data, size_t dataSize, const BaseMatrix &submat, std::string &result) {
+    extractProfileData(data, dataSize, submat, 1, result);
 }
