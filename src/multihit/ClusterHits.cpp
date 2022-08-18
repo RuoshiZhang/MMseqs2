@@ -313,8 +313,8 @@ unsigned int cluster_idx = 0;
             std::vector<std::string>  hdrcolumns = Util::split(header, "\t");
             unsigned int qSet = Util::fast_atoi<size_t>(hdrcolumns[0].c_str());
             unsigned int tSet = Util::fast_atoi<size_t>(hdrcolumns[1].c_str());
-            unsigned int Nq = Util::fast_atoi<size_t>(hdrcolumns[4].c_str()); //query set size
-            unsigned int Nt = Util::fast_atoi<size_t>(hdrcolumns[5].c_str()); //target set size
+            unsigned int Nq = Util::fast_atoi<size_t>(hdrcolumns[2].c_str()); //query set size
+            unsigned int Nt = Util::fast_atoi<size_t>(hdrcolumns[3].c_str()); //target set size
             hdrcolumns.clear();
             header.clear();
 

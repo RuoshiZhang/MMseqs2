@@ -32,10 +32,10 @@ void Aggregation::buildMap(char *data, int thread_idx, std::map<unsigned int, st
         }
 
         std::vector<std::string> columns = Util::split(line, "\t");
-        unsigned int targetKey = Util::fast_atoi<unsigned int>(columns[0].c_str());
+        unsigned int targetKey = Util::fast_atoi<unsigned int>(columns[1].c_str());
         size_t setId = targetSetReader->getId(targetKey);
         if (setId == UINT_MAX) {
-            Debug(Debug::ERROR) << "Invalid target database key " << columns[0] << ".\n";
+            Debug(Debug::ERROR) << "Invalid target database key " << columns[1] << ".\n";
             EXIT(EXIT_FAILURE);
         }
         char *data = targetSetReader->getData(setId, thread_idx);
@@ -50,7 +50,7 @@ int Aggregation::run() {
     reader.open(DBReader<unsigned int>::LINEAR_ACCCESS);
 
     std::string outputDBIndex = outputDbName + ".index";
-    DBWriter writer(outputDbName.c_str(), outputDBIndex.c_str(), threads, compressed, Parameters::DBTYPE_ALIGNMENT_RES);
+    DBWriter writer(outputDbName.c_str(), outputDBIndex.c_str(), threads, compressed, Parameters::DBTYPE_ALIGNMENT_RES); //TODO: check if this is true
     writer.open();
     Debug::Progress progress(reader.getSize());
 
@@ -84,6 +84,72 @@ int Aggregation::run() {
             buffer.clear();
         }
     };
+    writer.close();
+    reader.close();
+
+    return EXIT_SUCCESS;
+}
+
+int Aggregation::runWithHeader() {
+    std::string inputDBIndex = resultDbName + ".index";
+    DBReader<unsigned int> reader(resultDbName.c_str(), inputDBIndex.c_str(), threads, DBReader<unsigned int>::USE_DATA|DBReader<unsigned int>::USE_INDEX);
+    reader.open(DBReader<unsigned int>::LINEAR_ACCCESS);
+
+    std::string outputDBIndex = outputDbName + ".index";
+    DBWriter writer(outputDbName.c_str(), outputDBIndex.c_str(), threads, compressed, Parameters::DBTYPE_ALIGNMENT_RES); //TODO: check if this is true
+    writer.open();
+
+    std::string outputHdrName = outputDbName + "_h";
+    std::string outputHdrIndex = outputDbName + "_h.index";
+    DBWriter hdrwriter(outputHdrName.c_str(), outputHdrIndex.c_str(), threads, compressed, Parameters::DBTYPE_GENERIC_DB);
+    hdrwriter.open();
+    Debug::Progress progress(reader.getSize());
+
+#pragma omp parallel
+    {
+        unsigned int thread_idx = 0;
+#ifdef OPENMP
+        thread_idx = (unsigned int) omp_get_thread_num();
+#endif
+        std::string buffer;
+        buffer.reserve(10 * 1024);
+        std::string header;
+        header.reserve(1024);
+        unsigned int match_idx = 0;
+
+        std::map<unsigned int, std::vector<std::vector<std::string>>> dataToMerge;
+#pragma omp for
+        for (size_t i = 0; i < reader.getSize(); i++) {
+            progress.updateProgress();
+            dataToMerge.clear();
+
+            unsigned int querykey = reader.getDbKey(i);
+            buildMap(reader.getData(i, thread_idx), thread_idx, dataToMerge);
+            prepareInput(querykey, thread_idx);
+
+            for (std::map<unsigned int, std::vector<std::vector<std::string>>>::const_iterator it = dataToMerge.begin();
+                 it != dataToMerge.end(); ++it) {
+                unsigned int targetKey = it->first;
+                std::vector<std::vector<std::string>> columns = it->second;
+                std::string entryLine = aggregateEntry(columns, querykey, targetKey, thread_idx);
+                if (entryLine ==""){
+                    continue;
+                }
+                //header info is printed in the same string separated by comma
+                std::vector<std::string> column = Util::split(entryLine, ",");
+                header.append(column[0]);
+                header.append("\n");
+                buffer.append(column[1]);
+                buffer.append("\n");
+                unsigned int key = __sync_fetch_and_add(&(match_idx), 1);
+                hdrwriter.writeData(header.c_str(), header.length(), key, thread_idx);
+                writer.writeData(buffer.c_str(), buffer.length(), key, thread_idx);
+                buffer.clear();
+                header.clear();
+            }
+        }
+    };
+    hdrwriter.close(true);
     writer.close();
     reader.close();
 

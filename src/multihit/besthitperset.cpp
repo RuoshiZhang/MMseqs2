@@ -46,7 +46,7 @@ public :
 
         std::vector<std::string> *bestEntry = NULL;
         for (size_t i = 0; i < dataToAggregate.size(); i++) {
-            double eval = strtod(dataToAggregate[i][3].c_str(), NULL);
+            double eval = strtod(dataToAggregate[i][4].c_str(), NULL);
             double pval = eval/nbrGenes;
             //prevent log(0)
             if (pval == 0) {
@@ -99,7 +99,7 @@ public :
 
         // Aggregate the full line into string
         for (size_t i = 0; i < bestEntry->size(); ++i) {
-            if (i == 1) {
+            if (i == 2) {
                 char tmpBuf[15];
                 sprintf(tmpBuf, "%.3E", logCorrectedPval);
                 buffer.append(tmpBuf);

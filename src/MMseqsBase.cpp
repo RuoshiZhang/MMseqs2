@@ -518,7 +518,7 @@ std::vector<Command> baseCommands = {
                 "Ruoshi Zhang & Milot Mirdita <milot@mirdita.de>",
                 "<i:fastaFile1[.gz|bz2]> ... <i:fastaFileN[.gz|bz2]> <o:setDB> <tmpDir>",
                 CITATION_MMSEQS2, {{"fast[a|q]File[.gz|bz2]", DbType::ACCESS_MODE_INPUT, DbType::NEED_DATA | DbType::VARIADIC, &DbValidator::flatfile },
-                                                           {"setDB", DbType::ACCESS_MODE_OUTPUT, DbType::NEED_DATA, &DbValidator::flatfile },
+                                                           {"setDB", DbType::ACCESS_MODE_OUTPUT, DbType::NEED_DATA, &DbValidator::sequenceDb },
                                                            {"tmpDir", DbType::ACCESS_MODE_OUTPUT, DbType::NEED_DATA, &DbValidator::directory}}},
         {"multihitsearch",       multihitsearch,       &par.multihitsearch,       COMMAND_MULTIHIT,
                 "Search with a grouped set of sequences against another grouped set",

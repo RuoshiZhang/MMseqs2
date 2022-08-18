@@ -225,7 +225,7 @@ Parameters::Parameters():
         PARAM_SIMPLE_BEST_HIT(PARAM_SIMPLE_BEST_HIT_ID, "--simple-best-hit", "Use simple best hit", "Update the p-value by a single best hit, or by best and second best hits", typeid(bool), (void *) &simpleBestHit, ""),
         PARAM_ALPHA(PARAM_ALPHA_ID, "--alpha", "Alpha", "Set alpha for combining p-values during aggregation", typeid(float), (void *) &alpha, "^0(\\.[0-9]+)?|^1(\\.0+)?$"),
         PARAM_SHORT_OUTPUT(PARAM_SHORT_OUTPUT_ID, "--short-output", "Short output", "The output database will contain only the spread p-value", typeid(bool), (void *) &shortOutput, ""),
-        PARAM_AGGREGATION_MODE(PARAM_AGGREGATION_MODE_ID, "--aggregation-mode", "Aggregation mode", "Combined P-values computed from 0: multi-hit, 1: minimum of all P-values, 2: product-of-P-values, 3: truncated product", typeid(int), (void *) &aggregationMode, "^[0-4]{1}$"),
+        PARAM_AGGREGATION_MODE(PARAM_AGGREGATION_MODE_ID, "--aggregation-mode", "Aggregation mode", "Combined P-values computed from 0: multi-hit, 1: minimum of all P-values (deprecated), 2: product-of-P-values, 3: truncated product", typeid(int), (void *) &aggregationMode, "^[0-4]{1}$"),
         PARAM_BESTHIT_PVAL(PARAM_BESTHIT_PVAL_ID, "--besthit-pval", "Besthit P-value cutoff", "Multihit best hit P-value threshold for clustering", typeid(float), (void *) &bhPvalThr, "^0(\\.[0-9]+)?|^1(\\.0+)?$"),
         PARAM_FILTER_SELF_MATCH(PARAM_FILTER_SELF_MATCH_ID, "--filter-self-match", "Filter self match", "Remove hits between the same set. 0: do not filter, 1: filter", typeid(bool), (void *) &filterSelfMatch, ""),
         // clustersearch
@@ -837,6 +837,7 @@ Parameters::Parameters():
     combinepvalperset.push_back(&PARAM_ALPHA);
     combinepvalperset.push_back(&PARAM_AGGREGATION_MODE);
     // combinepvalperset.push_back(&PARAM_SHORT_OUTPUT);
+    combinepvalperset.push_back(&PARAM_FILTER_SELF_MATCH);
     combinepvalperset.push_back(&PARAM_THREADS);
     combinepvalperset.push_back(&PARAM_COMPRESSED);
     combinepvalperset.push_back(&PARAM_V);

@@ -69,10 +69,16 @@ else
     fi
 fi
 
+if notExists "${TMP_PATH}/result_prefixed.index"; then
+    # shellcheck disable=SC2086
+    "${MMSEQS}" prefixid  "${TMP_PATH}/result" "${TMP_PATH}/result_prefixed" ${THREADS_PAR} \
+        || fail "prefixid failed"
+fi
+
 if notExists "${TMP_PATH}/aggregate.index"; then
     # aggregation: take for each target set the best hit
     # shellcheck disable=SC2086
-    "${MMSEQS}" besthitperset "${QUERY}" "${TARGET}" "${TMP_PATH}/result" "${TMP_PATH}/aggregate" ${BESTHITBYSET_PAR} \
+    "${MMSEQS}" besthitperset "${QUERY}" "${TARGET}" "${TMP_PATH}/result_prefixed" "${TMP_PATH}/aggregate" ${BESTHITBYSET_PAR} \
         || fail "aggregate best hit failed"
 fi
 
@@ -82,38 +88,10 @@ if notExists "${TMP_PATH}/aggregate_merged.index"; then
         || fail "mergesetresults failed"
 fi
 
-
-if notExists "${TMP_PATH}/cEval.index"; then
-    # shellcheck disable=SC2086
-    "${MMSEQS}" combinepvalperset "${QUERY}" "${TARGET}" "${TMP_PATH}/aggregate_merged" "${TMP_PATH}/cEval" "${TMP_PATH}" ${COMBINEPVALPERSET_PAR} \
-        || fail "combinepvalperset failed"
-fi
-
-#TODO: check if this step is needed at all
-if notExists "${TMP_PATH}/match.index"; then
-    # shellcheck disable=SC2086
-    #TODO: parameterize cEval_thr
-    "${MMSEQS}" filterdb "${TMP_PATH}/cEval" "${TMP_PATH}/match" --filter-column "2" --comparison-operator "le" --comparison-value "0.01" ${THREADS_PAR} \
-        || fail "filterdb failed"
-fi
-
-#TODO: check if comebinepvalperset can handle qid being in the first column, if so, add prefix to prior to aggregate_merged
-if notExists "${TMP_PATH}/aggregate_prefixed.index"; then
-    # shellcheck disable=SC2086
-    "${MMSEQS}" prefixid  "${TMP_PATH}/aggregate" "${TMP_PATH}/aggregate_prefixed" ${THREADS_PAR} \
-        || fail "prefixid failed"
-fi
-
-if notExists "${TMP_PATH}/aggregate_prefixed_merged.index"; then
-    # shellcheck disable=SC2086
-    "${MMSEQS}" mergeresultsbyset "${QUERY}_set_to_member" "${TMP_PATH}/aggregate_prefixed" "${TMP_PATH}/aggregate_prefixed_merged" ${THREADS_PAR} \
-        || fail "mergesetresults failed"
-fi
-
 if notExists "${TMP_PATH}/matches.index"; then
     # shellcheck disable=SC2086
-    "${MMSEQS}" filtermatches "${QUERY}" "${TARGET}" "${TMP_PATH}/aggregate_prefixed_merged" "${TMP_PATH}/match" "${TMP_PATH}/matches" ${FILTERMATCHES_PAR} \
-        || fail "filtermatches failed"
+    "${MMSEQS}" combinepvalperset "${QUERY}" "${TARGET}" "${TMP_PATH}/aggregate_merged" "${TMP_PATH}/matches" "${TMP_PATH}" ${COMBINEPVALPERSET_PAR} \
+        || fail "combinepvalperset failed"
 fi
 
 if notExists "${TMP_PATH}/clusters.index"; then
