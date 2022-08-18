@@ -17,7 +17,7 @@ void setMultiHitSearchWorkflowDefaults(Parameters *p) {
 
     // TODO: Why??
     //p->scoreBias = 0.3;
-    p->simpleBestHit = false;
+    p->simpleBestHit = true;
     p->alpha = 1;
     // TODO: add a minimum alignment length cutoff, 4 residue alignments dont seem useful
     p->alnLenThr = 30;
