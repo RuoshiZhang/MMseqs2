@@ -55,16 +55,11 @@ if [ "$("${MMSEQS}" dbtype "${TMP_PATH}/seqDB")" = "Nucleotide" ]; then
         fail "Cannot find GFF directory file. Please provide a valid path to GFF directory file with the --gff-dir parameter."
     fi
 
-    if notExists "${TMP_PATH}/seqDB_nucl"; then
+    if notExists "${OUTDB}_nucl.index"; then
         # shellcheck disable=SC2086
-        "${MMSEQS}" gff2db $(cat "${GFFDIR}") "${TMP_PATH}/seqDB" "${TMP_PATH}/seqDB_nucl" ${GFF2DB_PAR} \
+        "${MMSEQS}" gff2db $(cat "${GFFDIR}") "${TMP_PATH}/seqDB" "${OUTDB}_nucl" ${GFF2DB_PAR} \
             || fail "gff2db failed"
     fi
-
-    mv -f "${TMP_PATH}/seqDB_nucl" "${OUTDB}_nucl"
-    mv -f "${TMP_PATH}/seqDB_nucl.lookup" "${OUTDB}.lookup"
-    mv -f "${TMP_PATH}/seqDB_nucl.index" "${OUTDB}_nucl.index"
-    mv -f "${TMP_PATH}/seqDB_nucl.dbtype" "${OUTDB}_nucl.dbtype"
 
     if notExists "${OUTDB}.index"; then
         # shellcheck disable=SC2086
@@ -98,13 +93,13 @@ elif [ "$("${MMSEQS}" dbtype "${TMP_PATH}/seqDB")" = "Aminoacid" ]; then
     rm "${TMP_PATH}/seqDB_h_pref"
     rm "${TMP_PATH}/seqDB_h_pref.tmp"
 
-	if notExists "${OUTDB}"; then
+	if notExists "${OUTDB}.index"; then
 	    # shellcheck disable=SC2086
 	    "${MMSEQS}" mvdb "${TMP_PATH}/seqDB" "${OUTDB}" ${VERBOSITY} \
 		|| fail "mvdb failed"
 	fi
 
-	if notExists "${OUTDB}_h"; then
+	if notExists "${OUTDB}_h.index"; then
 	    # shellcheck disable=SC2086
 	    "${MMSEQS}" mvdb "${TMP_PATH}/seqDB_h" "${OUTDB}_h" ${VERBOSITY} \
 		|| fail "mvdb failed"
