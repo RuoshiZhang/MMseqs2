@@ -1132,6 +1132,7 @@ public:
     std::vector<MMseqsParameter*> multihitdb;
     std::vector<MMseqsParameter*> multihitsearch;
     std::vector<MMseqsParameter*> iterativeclustersearch;
+    std::vector<MMseqsParameter*> aa2foldseek;
     std::vector<MMseqsParameter*> expandaln;
     std::vector<MMseqsParameter*> expand2profile;
     std::vector<MMseqsParameter*> pairaln;

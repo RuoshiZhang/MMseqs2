@@ -28,5 +28,6 @@ set(GENERATED_WORKFLOWS
         workflow/nucleotide_clustering.sh
         workflow/iterativepp.sh
         workflow/tsv2exprofiledb.sh
+        workflow/aa2foldseek.sh
         PARENT_SCOPE
         )

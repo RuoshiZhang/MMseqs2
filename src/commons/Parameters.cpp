@@ -1316,6 +1316,12 @@ Parameters::Parameters():
     multihitsearch = combineList(multihitsearch, filtermatches);
     multihitsearch.push_back(&PARAM_PROFILE_CLUSTER_SEARCH);
 
+    //aa2foldseek
+    aa2foldseek = combineList(prefilter, align);
+    aa2foldseek.push_back(&PARAM_COMPRESSED);
+    aa2foldseek.push_back(&PARAM_THREADS);
+    aa2foldseek.push_back(&PARAM_V);
+
 
     // iterative cluster search
     iterativeclustersearch = combineList(searchworkflow, besthitbyset);

@@ -14,5 +14,6 @@ set(multihit_source_files
         multihit/ClusterHits.cpp
         multihit/FilterMatches.cpp
         multihit/IterativeClusterSearch.cpp
+        multihit/aa2foldseek.cpp
         PARENT_SCOPE
         )

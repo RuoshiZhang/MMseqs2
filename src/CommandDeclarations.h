@@ -78,6 +78,7 @@ extern int msa2profile(int argc, const char **argv, const Command& command);
 extern int sequence2profile(int argc, const char **argv, const Command& command);
 extern int msa2result(int argc, const char **argv, const Command& command);
 extern int multihitdb(int argc, const char **argv, const Command& command);
+extern int aa2foldseek(int argc, const char **argv, const Command& command);
 extern int multihitsearch(int argc, const char **argv, const Command& command);
 extern int iterativeclustersearch(int argc, const char **argv, const Command& command);
 extern int nrtotaxmapping(int argc, const char **argv, const Command& command);
